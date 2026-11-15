@@ -1,0 +1,103 @@
+@startuml
+title Questao 1 - Provisionamento Multinuvem\nPadroes: Abstract Factory (RNF01 a RNF03) e Singleton (RNF04 e RNF05)
+
+interface FabricaProvedor <<AbstractFactory>> {
+  + getNome(): String
+  + criarMaquinaVirtual(): MaquinaVirtual
+  + criarArmazenamento(gb: int): Armazenamento
+  + criarFila(): FilaMensagens
+  + custoMensalEstimado(qtdMaquinas: int, gb: int): double
+}
+interface MaquinaVirtual <<ProdutoAbstrato>> {
+  + getIdentificador(): String
+  + custoMensal(): double
+}
+interface Armazenamento <<ProdutoAbstrato>> {
+  + getIdentificador(): String
+  + custoMensal(): double
+}
+interface FilaMensagens <<ProdutoAbstrato>> {
+  + getIdentificador(): String
+  + custoMensal(): double
+}
+
+class FabricaAws <<FabricaConcreta>> {
+  - maquinas: AtomicInteger
+  - armazenamentos: AtomicInteger
+  - filas: AtomicInteger
+}
+class FabricaAzure <<FabricaConcreta>> {
+  - maquinas: AtomicInteger
+  - armazenamentos: AtomicInteger
+  - filas: AtomicInteger
+}
+class MaquinaVirtualAws <<ProdutoConcreto>>
+class ArmazenamentoAws <<ProdutoConcreto>>
+class FilaAws <<ProdutoConcreto>>
+class MaquinaVirtualAzure <<ProdutoConcreto>>
+class ArmazenamentoAzure <<ProdutoConcreto>>
+class FilaAzure <<ProdutoConcreto>>
+
+class Ambiente <<ClienteDaFabrica>> {
+  - nome: String
+  - provedor: String
+  - regiao: String
+  - maquinas: List<MaquinaVirtual>
+  - armazenamento: Armazenamento
+  - fila: FilaMensagens
+  + custoMensal(): double
+  + resumo(): void
+}
+class Solicitacao {
+  - nomeAmbiente: String
+  - fabrica: FabricaProvedor
+  - quantidadeMaquinas: int
+  - gbArmazenamento: int
+}
+class Provisionador <<Montador>> {
+  + provisionar(solicitacao: Solicitacao): Ambiente
+}
+class Configuracao <<Singleton>> {
+  - regiao: String
+  - orcamentoMensal: double
+  + {static} getInstance(): Configuracao
+}
+class Auditoria <<Singleton>> {
+  - registros: List<String>
+  + {static} getInstance(): Auditoria
+  + registrar(nome, provedor, resultado): void
+}
+class Main
+
+FabricaProvedor <|.. FabricaAws
+FabricaProvedor <|.. FabricaAzure
+MaquinaVirtual <|.. MaquinaVirtualAws
+MaquinaVirtual <|.. MaquinaVirtualAzure
+Armazenamento <|.. ArmazenamentoAws
+Armazenamento <|.. ArmazenamentoAzure
+FilaMensagens <|.. FilaAws
+FilaMensagens <|.. FilaAzure
+
+FabricaAws ..> MaquinaVirtualAws : cria
+FabricaAws ..> ArmazenamentoAws : cria
+FabricaAws ..> FilaAws : cria
+FabricaAzure ..> MaquinaVirtualAzure : cria
+FabricaAzure ..> ArmazenamentoAzure : cria
+FabricaAzure ..> FilaAzure : cria
+
+Ambiente o-- MaquinaVirtual
+Ambiente o-- Armazenamento
+Ambiente o-- FilaMensagens
+Ambiente ..> FabricaProvedor : usa
+Ambiente ..> Configuracao : consulta a regiao
+Provisionador ..> Solicitacao : le
+Provisionador ..> Ambiente : monta via fabrica
+Provisionador ..> Configuracao : consulta o orcamento
+Provisionador ..> Auditoria : registra
+Solicitacao o-- FabricaProvedor
+Main ..> Provisionador
+Main ..> Solicitacao : cria
+Main ..> FabricaAws : escolhe o provedor
+Main ..> FabricaAzure : escolhe o provedor
+Main ..> Auditoria : imprime o historico
+@enduml

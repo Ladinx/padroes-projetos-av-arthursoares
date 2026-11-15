@@ -1,0 +1,109 @@
+@startuml
+title Questao 2 - Casa de Leiloes Online\nPadroes: Observer (RNF01), Strategy (RNF02) e Decorator (RNF03 e RNF04)
+
+interface InteressadoLote <<Observer>> {
+  + lanceAceito(nomeLote: String, valor: double): void
+}
+class Participante <<ObservadorConcreto>> {
+  - nome: String
+}
+interface Licitante <<RNF01>> {
+  + getNome(): String
+}
+class PainelLeiloeiro <<ObservadorConcreto>> {
+  - maiorLance: Map<String, Double>
+  - totalLances: Map<String, Integer>
+}
+class Auditor <<ObservadorConcreto>> {
+  - registros: List<String>
+}
+
+class Lote <<Subject>> {
+  - nome: String
+  - categoria: String
+  - precoInicial: double
+  - precoReserva: double
+  - acompanhantes: List<InteressadoLote>
+  - regraComissao: RegraComissao
+  - lanceAtual: double
+  - arrematante: Licitante
+  - totalLances: int
+  - encerrado: boolean
+  - vendido: boolean
+  + acompanhar(interessado): void
+  + deixarDeAcompanhar(interessado): void
+  + darLance(licitante: Licitante, valor: double): boolean
+  + setRegraComissao(regra): void
+  + encerrar(): void
+  + getComissao(): double
+}
+
+interface RegraComissao <<Strategy>> {
+  + calcular(valorVenda: double): double
+}
+class ComissaoArte <<EstrategiaConcreta>>
+class ComissaoVeiculos <<EstrategiaConcreta>>
+class ComissaoImoveis <<EstrategiaConcreta>>
+class ComissaoEletronicos <<EstrategiaConcreta>>
+
+interface ItemFatura <<Component>> {
+  + getDescricao(): String
+  + getCusto(): double
+  + getValorVenda(): double
+  + imprimir(): void
+}
+class Venda <<ComponenteConcreto>> {
+  - nomeLote: String
+  - valorVenda: double
+}
+abstract class ServicoAdicional <<Decorator>> {
+  - item: ItemFatura
+  - nome: String
+  + {abstract} getCustoAdicional(): double
+}
+class SeguroTransporte <<DecoradorConcreto>>
+class CertificadoAutenticidade <<DecoradorConcreto>>
+class EmbalagemEspecial <<DecoradorConcreto>>
+class EntregaExpressa <<DecoradorConcreto>>
+
+class Fatura {
+  - item: ItemFatura
+  + imprimir(): void
+}
+class Main
+
+InteressadoLote <|.. Participante
+Licitante <|.. Participante
+InteressadoLote <|.. PainelLeiloeiro
+InteressadoLote <|.. Auditor
+Lote o-- InteressadoLote : notifica
+Lote o-- Licitante : arrematante
+
+RegraComissao <|.. ComissaoArte
+RegraComissao <|.. ComissaoVeiculos
+RegraComissao <|.. ComissaoImoveis
+RegraComissao <|.. ComissaoEletronicos
+Lote o-- RegraComissao : troca em tempo de execucao
+
+ItemFatura <|.. Venda
+ItemFatura <|.. ServicoAdicional
+ServicoAdicional o-- ItemFatura : decora
+ServicoAdicional <|-- SeguroTransporte
+ServicoAdicional <|-- CertificadoAutenticidade
+ServicoAdicional <|-- EmbalagemEspecial
+ServicoAdicional <|-- EntregaExpressa
+
+Fatura o-- ItemFatura
+Lote ..> Licitante : recebe os lances
+Main ..> Lote
+Main ..> Participante
+Main ..> PainelLeiloeiro
+Main ..> Auditor
+Main ..> Fatura
+Main ..> ComissaoArte : escolhe a regra inicial
+Main ..> ComissaoEletronicos : troca na campanha
+Main ..> SeguroTransporte
+Main ..> CertificadoAutenticidade
+Main ..> EmbalagemEspecial
+Main ..> EntregaExpressa
+@enduml
